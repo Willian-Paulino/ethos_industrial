@@ -1,0 +1,97 @@
+ETHOS INDUSTRIAL | GitHub Pages + Node.js + SQLite + Firebase (HÍBRIDO)
+=========================================================================
+
+ESTADO: PACOTE PREPARADO, NÃO PUBLICADO. Necessita GitHub, endereço HTTPS
+para a API e autorização da TI para expor dados da empresa à internet.
+
+ARQUITETURA
+- GitHub Pages: 3 páginas públicas de entrada (index/admin/ajuda), logo,
+  carregador e ponte para API. NENHUM DADO DO SQLITE OU CHAVE FIREBASE NO GITHUB.
+- Node.js: continua servindo as páginas completas autenticadas via /api/pages/view.
+  Mantém toda lógica, usuários, perfis, indicadores SLA, auditoria, solicitações.
+- SQLite: dados/ethos.sqlite3 local permanece fonte de verdade.
+- Firebase: integração de saída existente continua opcional e independente.
+- Segurança: login feito no Node.js; redirecionamento para Pages usa código
+  aleatório de uso único válido 60 s, trocado por token de sessão via CORS.
+  O token fica apenas na sessionStorage do navegador, nunca no repositório.
+  Sessões expiram em até 8 horas. Logout revoga sessão no SQLite.
+
+ANTES DE TUDO
+1. Solicite autorização da TI da ETHOS para publicação de uma interface
+   pública e de API acessível pela internet. GitHub Pages é público.
+2. Faça backup da pasta dados e de email.config.json, se existir.
+3. Nunca coloque dados/, backups/, firebase.local.bat, pages.local.bat,
+   email.config.json, tokens ou JSON de conta de serviço no GitHub.
+4. Mude senhas que já foram compartilhadas em conversas.
+
+PASSO 1 - GITHUB PAGES
+1. Crie um repositório (ex.: ethos-industrial) no GitHub.
+2. Publique SOMENTE o conteúdo da pasta github-pages/ na raiz do repositório.
+3. Antes de enviar, edite github-pages/pages-config.js:
+     apiBase: 'https://api.SEUDOMINIO.com'
+   O domínio deve apontar para o proxy HTTPS do Node.js.
+4. Em Settings > Pages > Build and deployment > Deploy from a branch,
+   escolha a branch main e pasta /(root).
+5. Anote a URL real publicada, ex.:
+     https://SEU-USUARIO.github.io/ethos-industrial/
+   O projeto pode demorar alguns minutos para publicar.
+6. Repositório público NÃO significa que chamados e banco ficam públicos:
+   estes só saem do backend após autenticação. Contudo os arquivos
+   estáticos e o código JavaScript são públicos.
+
+PASSO 2 - NODE.JS (NO COMPUTADOR QUE JÁ HOSPEDA O ETHOS)
+1. Pare o servidor e faça backup de dados/.
+2. Copie o conteúdo de backend/ para a pasta do ETHOS, substituindo
+   server.js e demais arquivos do sistema, MAS NÃO APAGUE dados/.
+   Para atualização incremental, utilize o ZIP de atualização.
+3. Execute npm install (se dependências ainda não instaladas).
+4. Copie pages.local.example.bat para pages.local.bat.
+5. Configure ETHOS_PAGES_URL com a URL EXATA do Pages (com / final).
+6. Mantenha firebase.local.bat caso já utilize Firebase.
+7. Inicie INICIAR_GITHUB_PAGES_BACKEND.bat.
+8. O servidor escuta SOMENTE em 127.0.0.1:8765. NÃO abra a porta
+   8765 no roteador ou na internet.
+
+PASSO 3 - PUBLICAR A API HTTPS
+Necessário proxy/túnel HTTPS confiável com URL estável, ex.:
+  https://api.SEUDOMINIO.com  ->  http://127.0.0.1:8765
+Pode ser Cloudflare Tunnel com domínio próprio gerenciado pela TI,
+ou reverse proxy HTTPS em infraestrutura autorizada.
+- Configure TLS válido, sem TLS inseguro e sem HTTP público.
+- Encaminhe Host corretamente para o Node.js (formulário de login).
+- Configure limite de requisições, monitoramento e controle de acesso.
+- Não desative a validação de CORS/Origin.
+- Faça backup automatizado e teste restauração.
+- Verifique políticas de rede, LGPD e segurança da empresa.
+
+PASSO 4 - TESTE
+1. Abra https://api.SEUDOMINIO.com/pages-login para conferir o formulário.
+2. Abra https://SEU-USUARIO.github.io/ethos-industrial/.
+3. O Pages redireciona para login HTTPS no Node.js.
+4. Entre com um usuário autorizado; você voltará ao GitHub Pages.
+5. Teste os 3 perfis: admin, intermediate, common.
+6. Crie um chamado de teste, responda e confira indicadores de SLA.
+7. Verifique Admin > Firebase: sincronização continua independente.
+8. Teste logout, nova sessão e reconexão.
+
+LIMITAÇÕES IMPORTANTES
+- O GitHub Pages não roda Node.js, SQLite ou Firebase Admin SDK.
+- O Pages fornece o shell estático; a interface autenticada completa
+  é carregada da API Node.js em tempo de execução.
+- O backend PRECISA estar ligado e acessível via HTTPS para usar Pages.
+- Não é um modo offline pela internet. LAN local continua funcionando
+  se iniciado pelo INICIAR_REDE_LOCAL.bat (sem a interface Pages).
+- Token em sessionStorage: protege contra cookies de terceiros bloqueados,
+  mas scripts maliciosos/XSS poderiam acessá-lo. Revise dependências e
+  evite extensões/scripts de terceiros não confiáveis.
+- Não é adequado para exposição pública sem revisão da TI, testes
+  de penetração e política de gestão de acesso.
+
+ARQUIVOS
+- github-pages/: enviar SOMENTE estes arquivos ao GitHub.
+- backend/: atualizar servidor, com novos endpoints /pages-login,
+  /api/pages/exchange e /api/pages/view.
+- pages.local.example.bat: modelo de configuração sem segredo.
+- INICIAR_GITHUB_PAGES_BACKEND.bat: inicia servidor local seguro.
+
+NÃO PRECISA CRIAR OUTRO BANCO SQLITE NEM OUTRO PROJETO FIREBASE.
