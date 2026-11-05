@@ -1,0 +1,28 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ETHOS Industrial · Carregando</title>
+<style>body{font:15px Segoe UI,Arial,sans-serif;background:#eef1f6;color:#223044;min-height:100vh;display:grid;place-items:center;margin:0;padding:20px}.box{background:white;max-width:540px;padding:35px;border-radius:20px;box-shadow:0 18px 50px #15243816;text-align:center}.box img{width:150px}.box p{line-height:1.6;color:#68778c}.box a{color:#a32247}</style></head><body><main class="box"><img src="ethos-logo.png" alt="ETHOS Industrial"><h2 id="heading">Carregando o ETHOS...</h2><p id="message">Conectando ao Firebase Authentication e Firestore.</p><p><a id="back" href="login.html" hidden>Voltar ao login</a></p></main>
+<script src="firebase-config.js"></script><script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script><script src="firebase-cloud.js"></script>
+<script>
+(async()=>{
+ const page='dashboard',heading=document.getElementById('heading'),message=document.getElementById('message'),back=document.getElementById('back');
+ try{
+  if(window.ethosCloudConfigError)throw Error(window.ethosCloudConfigError);
+  const u=await window.ethosCloud.user();if(!u){location.replace('login.html');return;}
+  const p=await window.ethosCloud.profile();
+  if(page==='dashboard'&&p.role==='common'){location.replace('ajuda.html');return;}
+  if(page==='admin'&&p.role!=='admin'){location.replace(p.role==='common'?'ajuda.html':'index.html');return;}
+  if(page==='ajuda'&&p.role==='intermediate'){location.replace('index.html');return;}
+  heading.textContent='Preparando os painéis...';
+  let source=await fetch('views/'+page+'.html',{cache:'no-store'});if(!source.ok)throw Error('Arquivo da interface não encontrado.');
+  let html=await source.text();
+  if(page==='dashboard'){
+   const data=await window.ethosCloud.getState();
+   const safe=v=>JSON.stringify(v).replace(/[<>&\u2028\u2029]/g,c=>({'<':'\\u003c','>':'\\u003e','&':'\\u0026','\u2028':'\\u2028','\u2029':'\\u2029'}[c]));
+   html=html.replace('"__ETHOS_DB_BOOTSTRAP_JSON__"',safe(data)).replace('"__ETHOS_DB_ROLE__"',safe(p.role));
+  }else if(page==='ajuda'){
+   html=html.replaceAll('__ETHOS_HELP_ROLE__',p.role).replaceAll('__ETHOS_HELP_USER__',p.username);
+  }
+  html=html.replace('<head>','<head><script>window.__ETHOS_DB_LOADED__=true;<\/script>');
+  document.open();document.write(html);document.close();
+ }catch(e){console.error('ETHOS:',e);heading.textContent='Não foi possível abrir o ETHOS';message.textContent=e.message||'Verifique a conexão e as permissões do Firestore.';back.hidden=false;}
+})();
+</script></body></html>
