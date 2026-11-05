@@ -1,6 +1,0 @@
-ETHOS Industrial - GitHub Pages
-1. Edite pages-config.js com a URL HTTPS do seu backend Node.js.
-2. Publique SOMENTE os arquivos desta pasta no GitHub Pages.
-3. No backend, configure ETHOS_PAGES_URL para o endereco exato do Pages.
-4. Nao coloque SQLite, Firebase Admin JSON ou senhas no GitHub.
-Leia LEIA-ME_PUBLICACAO_GITHUB_PAGES.txt no kit completo.
